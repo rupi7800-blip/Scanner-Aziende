@@ -32,6 +32,8 @@
       window.PROVINCE.find(x => x.nome.toLowerCase() === t.toLowerCase());
     return p ? p.sigla : '';
   }
+  // Ricerca web dell'azienda: nome, comune e provincia (si apre solo se clicchi il link).
+  const cercaWeb = d => 'https://www.google.com/search?q=' + encodeURIComponent([d.nome, d.comune, d.provincia].filter(Boolean).join(' '));
   const urlSicuro = u => /^https?:\/\//i.test(u) ? u : (u ? 'https://' + u : '');
 
   // Dimensione secondo la raccomandazione UE 2003/361 (addetti + fatturato).
@@ -282,7 +284,7 @@
       ].filter(Boolean).join('<br>') || '<span class="muto">nessun contatto</span>';
       const div = ATECO.divisioneDaCodice(d.ateco);
       return `<tr>
-        <td data-l="Azienda"><b>${esc(d.nome)}</b><br><span class="muto">P.IVA ${esc(d.piva || 'n.d.')} · ${esc(d.fonte)}</span></td>
+        <td data-l="Azienda"><b><a href="${esc(cercaWeb(d))}" target="_blank" rel="noopener noreferrer" title="Cerca sul web (si apre in una nuova scheda)">${esc(d.nome)}</a></b><br><span class="muto">P.IVA ${esc(d.piva || 'n.d.')} · ${esc(d.fonte)}</span></td>
         <td data-l="Sede">${esc(d.comune)}<br><span class="muto">${esc(d.provincia || 'prov. n.d.')}</span></td>
         <td data-l="Settore">${esc(ATECO.sezioneDaCodice(d.ateco) || '—')} · ${div != null ? esc(ATECO.nomeDivisione(div)) : '—'}<br><span class="muto">ATECO ${esc(d.ateco || 'n.d.')}</span></td>
         <td data-l="Dimensione"><span class="badge ${k}">${DIM[k]}</span><br><span class="muto">${d.addetti != null ? d.addetti + ' addetti' : 'addetti n.d.'}</span></td>
