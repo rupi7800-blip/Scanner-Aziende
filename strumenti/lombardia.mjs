@@ -7,6 +7,8 @@ const o = opzioni();
 const limite = o.limite ? Number(o.limite) : Infinity;
 const filtroProv = o.province ? String(o.province).toUpperCase().split(',') : null;
 const valide = sigleValide();
+// Toglie gli spazi e scarta tutto ciò che non ha forma di indirizzo e-mail (es. "non si legge").
+const emailValida = v => { const e = testo(v).replace(/\s+/g, '').toLowerCase(); return /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e) ? e : ''; };
 const BASE = 'https://dati.lombardia.it';
 const COL_ADDETTI = ['titolare_e_soci', 'familiari_e_collaboratori', 'impiegati', 'operai_generici', 'operai_specializzati', 'altri_dipendenti', 'apprendisti']
   .flatMap(c => [c + '_maschi', c + '_femmine']);
@@ -32,7 +34,8 @@ for (const d of dataset) {
     for (const r of righe) {
       const prov = testo(r.sigla_provincia).toUpperCase();
       if (!valide.has(prov) || (filtroProv && !filtroProv.includes(prov))) continue;
-      const piva = testo(r.partita_iva).replace(/\D/g, '');
+      let piva = testo(r.partita_iva).replace(/\D/g, '');
+      if (piva.length === 10) piva = '0' + piva; // la fonte perde lo zero iniziale
       const chiave = piva || testo(r.ragione_sociale) + prov;
       if (visti.has(chiave)) continue; visti.add(chiave);
       const addetti = COL_ADDETTI.reduce((s, c) => s + (Number(r[c]) || 0), 0);
@@ -43,10 +46,10 @@ for (const d of dataset) {
         provincia: prov,
         comune: testo(r.comune),
         indirizzo: testo([r.indirizzo_impresa, r.n_civico].filter(Boolean).join(' ') + (r.cap ? ', ' + r.cap : '')),
-        ateco: testo(r.codice_ateco),
+        ateco: testo(r.codice_ateco).replace(',', '.'),
         addetti,
         fatturato: null,
-        email: testo(r.email).toLowerCase(),
+        email: emailValida(r.email),
         pec: '',
         telefono: testo(r.telefono),
         sito: sito(r.sito_web),
