@@ -23,7 +23,7 @@ unendo i duplicati per P.IVA. Verificate con richieste reali il 22/11/2026.
 | Regione Lombardia · Imprese artigiane (CC0) | `npm run dati:lombardia` | Nominativo: ragione sociale, P.IVA, ATECO, addetti, **e-mail, telefono, sito** | Solo artigianato di alcune province lombarde (Como, Pavia, Sondrio e poche altre); include ditte individuali |
 | IndicePA (CC-BY) | `npm run dati:ipa` | Enti pubblici e gestori di servizi: sede, **PEC/e-mail**, sito | Pubblica amministrazione, non imprese |
 | GLEIF (CC0) | `npm run dati:gleif` | Entità con LEI: nome, sede, P.IVA | Nessun contatto/settore/fatturato; filtro provincia solo lato client (~2.600 pagine) |
-| Wikidata (CC0) | `npm run dati:wikidata` | Sito, **fatturato** (~2%), dipendenti (~3%) | Poche e grandi aziende; provincia spesso assente |
+| Wikidata (CC0) | `npm run dati:wikidata` | Sito, **fatturato** e dipendenti (solo in una minoranza di record: in un campione 11% e 17%) | Poche e grandi aziende |
 | VIES (UE) | `node strumenti/vies.mjs dati/<file>.json` | Verifica P.IVA, ragione sociale e sede | Una P.IVA alla volta, con pausa |
 
 Non raggiungibili/non utilizzati: **ANAC** (blocco anti-bot del sito), **Overpass/OpenStreetMap** (connessione interrotta
