@@ -2,6 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const PAGINA = 50;
+  const FMT = { useGrouping: 'always' }; // l'italiano non raggruppa i numeri a 4 cifre (7405): lo forziamo (7.405)
   const DIM = { micro: 'Micro', piccola: 'Piccola', media: 'Media', grande: 'Grande', nd: 'Non determinabile' };
   let dati = [];
   let filtrati = [];
@@ -162,22 +163,30 @@
 
     const contS = {};
     dati.forEach(d => { const s = ATECO.sezioneDaCodice(d.ateco); if (s) contS[s] = (contS[s] || 0) + 1; });
+    const senzaAteco = dati.filter(d => !ATECO.sezioneDaCodice(d.ateco)).length;
     $('settore').innerHTML = '<option value="">Tutti i settori</option>' + ATECO.sezioni.map(s =>
-      `<option value="${s.codice}">${s.codice} · ${esc(s.nome)} · ${contS[s.codice] || 0}</option>`).join('');
+      `<option value="${s.codice}">${s.codice} · ${esc(s.nome)} · ${contS[s.codice] || 0}</option>`).join('') +
+      `<option value="?">Senza codice ATECO (es. GLEIF, Wikidata) · ${senzaAteco}</option>`;
     aggiornaSottosettori();
   }
 
   function aggiornaSottosettori() {
     const sez = $('settore').value, sel = $('sottosettore');
     if (!sez) { sel.innerHTML = '<option value="">Scegli prima un settore</option>'; sel.disabled = true; return; }
+    if (sez === '?') { sel.innerHTML = '<option value="">Non applicabile</option>'; sel.disabled = true; return; }
+    const prec = sel.value;
     const cont = {};
     dati.forEach(d => { if (ATECO.sezioneDaCodice(d.ateco) === sez) { const v = ATECO.divisioneDaCodice(d.ateco); cont[v] = (cont[v] || 0) + 1; } });
+    // Con i dati ISTAT della provincia scelta compaiono anche le divisioni dove non hai ancora aziende (conteggio 0).
+    const mk = mercati[$('provincia').value], sz = ATECO.sezioni.find(x => x.codice === sez);
+    if (mk && sz) for (const cod of Object.keys(mk.divisioni)) { if (+cod >= sz.da && +cod <= sz.a && !(+cod in cont)) cont[+cod] = 0; }
     const voci = Object.keys(cont).map(Number).sort((a, b) => a - b);
     sel.innerHTML = '<option value="">Tutti i sottosettori</option>' + (voci.length
       ? voci.map(v => `<option value="${v}">${String(v).padStart(2, '0')} · ${esc(ATECO.nomeDivisione(v))} · ${cont[v]}</option>`).join('')
       : '');
     sel.disabled = !voci.length;
     if (!voci.length) sel.innerHTML = '<option value="">Nessun sottosettore nei dati</option>';
+    else if ([...sel.options].some(o => o.value === prec)) sel.value = prec;
   }
 
   function applica() {
@@ -188,7 +197,7 @@
     const soloContatti = $('soloContatti').checked, soloFatt = $('soloFatturato').checked;
     filtrati = dati.filter(d => {
       if (prov && d.provincia !== prov) return false;
-      if (sez && ATECO.sezioneDaCodice(d.ateco) !== sez) return false;
+      if (sez === '?' ? ATECO.sezioneDaCodice(d.ateco) : (sez && ATECO.sezioneDaCodice(d.ateco) !== sez)) return false;
       if (sub && String(ATECO.divisioneDaCodice(d.ateco)) !== sub) return false;
       if (dims.length && !dims.includes(dimensione(d))) return false;
       if (soloFatt && d.fatturato == null) return false;
@@ -214,6 +223,7 @@
 
   // ---------- mercato (ISTAT, dati/mercato-<sigla>.json) ----------
   const mercati = {};
+  let provSotto = '';
   async function caricaMercato(sig) {
     if (!(sig in mercati)) {
       try { mercati[sig] = await (await fetch('dati/mercato-' + sig + '.json')).json(); }
@@ -224,7 +234,9 @@
   async function aggiornaMercato() {
     const box = $('mercato'), prov = $('provincia').value;
     const m = prov ? await caricaMercato(prov) : null;
-    if (!m || prov !== $('provincia').value) { box.hidden = true; return; }
+    if (prov !== $('provincia').value) return;       // nel frattempo la scelta è cambiata
+    if (provSotto !== prov) { provSotto = prov; aggiornaSottosettori(); }
+    if (!m || $('settore').value === '?') { box.hidden = true; return; }
     const sez = $('settore').value, sub = $('sottosettore').value;
     let u = 0, a = 0, etichetta = 'tutti i settori';
     if (sub) {
@@ -240,8 +252,8 @@
     const nel = dati.filter(d => d.provincia === prov && (!sez || ATECO.sezioneDaCodice(d.ateco) === sez) &&
       (!sub || String(ATECO.divisioneDaCodice(d.ateco)) === sub)).length;
     box.hidden = false;
-    box.innerHTML = `<b>Mercato ${esc(prov)}, ${esc(etichetta)} (ISTAT ${m.anno}):</b> ${u.toLocaleString('it-IT')} unità locali, ` +
-      `${a.toLocaleString('it-IT')} addetti. Nei tuoi dati: <b>${nel.toLocaleString('it-IT')}</b> aziende ` +
+    box.innerHTML = `<b>Mercato ${esc(prov)}, ${esc(etichetta)} (ISTAT ${m.anno}):</b> ${u.toLocaleString('it-IT', FMT)} unità locali, ` +
+      `${a.toLocaleString('it-IT', FMT)} addetti. Nei tuoi dati: <b>${nel.toLocaleString('it-IT', FMT)}</b> aziende ` +
       `(${u ? (nel / u * 100).toFixed(1).replace('.', ',') : '0'}% delle unità locali). ` +
       `<span class="muto">Le unità locali non coincidono con le imprese; contano anche sedi secondarie.</span>`;
   }
@@ -252,7 +264,7 @@
     const tot = filtrati.length;
     const conF = filtrati.filter(d => d.fatturato != null);
     const somma = conF.reduce((s, d) => s + d.fatturato, 0);
-    $('riepilogo').innerHTML = `<b>${tot.toLocaleString('it-IT')}</b> aziende · con contatti <b>${filtrati.filter(d => d.email || d.pec || d.telefono).length.toLocaleString('it-IT')}</b> · fatturato noto per <b>${conF.length.toLocaleString('it-IT')}</b> (somma ${eur(somma)})`;
+    $('riepilogo').innerHTML = `<b>${tot.toLocaleString('it-IT', FMT)}</b> aziende · con contatti <b>${filtrati.filter(d => d.email || d.pec || d.telefono).length.toLocaleString('it-IT', FMT)}</b> · fatturato noto per <b>${conF.length.toLocaleString('it-IT', FMT)}</b> (somma ${eur(somma)})`;
     const da = pagina * PAGINA, fetta = filtrati.slice(da, da + PAGINA);
     $('righe').innerHTML = fetta.map(d => {
       const k = dimensione(d);
@@ -326,9 +338,9 @@
     const reali = unisci(importati.concat(coll.righe));
     dati = reali.length ? reali : window.generaDemo();
     $('fonteInfo').textContent = reali.length
-      ? `Caricate ${reali.length.toLocaleString('it-IT')} aziende` +
+      ? `Caricate ${reali.length.toLocaleString('it-IT', FMT)} aziende` +
         (coll.righe.length ? ` (fonti collegate: ${coll.fonti.join('; ')})` : '') +
-        (importati.length ? ` e archivi importati (${importati.length.toLocaleString('it-IT')}).` : '.')
+        (importati.length ? ` e archivi importati (${importati.length.toLocaleString('it-IT', FMT)}).` : '.')
       : 'Dati DEMO interamente fittizi: collega le fonti (vedi README, npm run dati) o importa un tuo archivio CSV/JSON.';
     iniziaFiltri(); applica();
 
