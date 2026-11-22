@@ -1,0 +1,22 @@
+{
+  "fonti": [
+    {
+      "file": "gleif-VA.json",
+      "n": 3715,
+      "aggiornato": "2026-11-22",
+      "titolo": "GLEIF · entità con codice LEI",
+      "licenza": "CC0",
+      "url": "https://www.gleif.org/en/lei-data/gleif-golden-copy",
+      "nota": "Senza contatti, settore, addetti né fatturato. Utile per anagrafica e P.IVA. Limite API: 10.000 risultati per ricerca."
+    },
+    {
+      "file": "wikidata-VA.json",
+      "n": 34,
+      "aggiornato": "2026-11-22",
+      "titolo": "Wikidata · aziende italiane",
+      "licenza": "CC0",
+      "url": "https://www.wikidata.org",
+      "nota": "Copertura bassa: fatturato e addetti presenti solo in una minoranza di record (da un campione: 11% e 17%), prevalentemente grandi aziende. Il fatturato è preso senza controllare valuta e anno: può non essere in euro né il più recente."
+    }
+  ]
+}

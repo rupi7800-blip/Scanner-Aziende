@@ -1,3 +1,9 @@
+# Dati generati dai connettori: in locale, non nel repository (contengono e-mail di ditte individuali).
 dati/*.json
+# Eccezioni: fonti aperte non personali per la provincia di Varese, pubblicate perché l'app sia usabile da telefono.
+!dati/indice.json
+!dati/gleif-VA.json
+!dati/wikidata-VA.json
+!dati/mercato-VA.json
 node_modules/
 .claude/worktrees/

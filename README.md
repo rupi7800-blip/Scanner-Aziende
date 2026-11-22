@@ -48,6 +48,16 @@ fissa ogni Camera, in genere a nominativo) o con una convenzione con InfoCamere.
    per ATECO/comune** e **importarlo come CSV** dal pulsante nella pagina. Nel CSV usa le colonne indicate sopra; il fatturato
    arriva solo se l'estrazione lo include (di norma proviene dai bilanci depositati, a pagamento).
 
+## Uso da smartphone (GitHub Pages)
+
+L'app è statica: GitHub Pages la serve direttamente e dal telefono si può **aggiungere alla schermata Home** (menu del browser →
+*Aggiungi a Home*). Su Pages è pubblicata anche una base dati **aperta e senza contatti** per la provincia di Varese
+(ISTAT, GLEIF, Wikidata). I dati con e-mail e PEC (IndicePA, imprese artigiane lombarde) **non** sono pubblicati.
+
+Per lavorare con contatti reali dal telefono: importa il CSV dal pulsante nella pagina. Il file resta **solo nel browser del tuo telefono**
+(IndexedDB) e non viene inviato a nessun server; "Svuota archivio locale" lo cancella. Attenzione: il sito Pages è pubblico, quindi
+**non committare mai** CSV con dati personali nel repository.
+
 ## Privacy e uso dei contatti
 
 **Licenza aperta (CC0, CC-BY) non significa libero uso per marketing**: gli obblighi GDPR restano.
