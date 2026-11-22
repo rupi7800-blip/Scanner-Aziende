@@ -12,7 +12,7 @@ const nuts = o.nuts || NUTS[sigla];
 if (!sigla || !nuts) { console.error('Uso: node strumenti/istat.mjs --provincia VA [--nuts ITC41]'); process.exit(1); }
 
 const FLOW = 'IT1,183_1163_DF_DICA_ASIAULP_TERRIFDATA_6,1.0';
-const url = `https://esploradati.istat.it/SDMXWS/rest/data/${FLOW}/A.${nuts}.LU+LUEMPDAA..TOTAL?startPeriod=2021&dimensionAtObservation=AllDimensions`;
+const url = `https://esploradati.istat.it/SDMXWS/rest/data/${FLOW}/A.${nuts}.LU+LUEMPDAA..TOTAL?startPeriod=2022&endPeriod=2022&dimensionAtObservation=AllDimensions`;
 console.log('Interrogo ISTAT (può richiedere circa un minuto)…');
 const csv = await (await scarica(url, { headers: { Accept: 'application/vnd.sdmx.data+csv;version=1.0.0' }, timeout: 240000 }, 3)).text();
 

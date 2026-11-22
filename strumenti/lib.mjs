@@ -33,7 +33,8 @@ export async function scarica(url, opts = {}, tentativi = 4) {
     try {
       const r = await fetch(url, {
         ...opts,
-        headers: { 'User-Agent': 'scanner-aziende/1.0 (client open data)', ...(opts.headers || {}) },
+        // Accept-Language esplicito: con quello predefinito di Node ("*") ISTAT risponde 500.
+        headers: { 'User-Agent': 'scanner-aziende/1.0 (client open data)', 'Accept-Language': 'it,en;q=0.8', ...(opts.headers || {}) },
         signal: AbortSignal.timeout(opts.timeout || 120000)
       });
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
