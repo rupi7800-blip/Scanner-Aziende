@@ -47,22 +47,23 @@
   }
 
   function normalizza(r, i, fonte) {
-    const ateco = r.ateco || r.codice_ateco || '';
+    const t = v => (v == null ? '' : String(v));
+    const ateco = t(r.ateco || r.codice_ateco);
     return {
       id: r.id || fonte + '-' + i,
-      nome: r.nome || r.ragione_sociale || r.denominazione || '(senza nome)',
-      piva: r.piva || r.partita_iva || '',
+      nome: t(r.nome || r.ragione_sociale || r.denominazione) || '(senza nome)',
+      piva: t(r.piva || r.partita_iva),
       provincia: siglaProvincia(r.provincia || r.prov),
-      comune: r.comune || r.citta || '',
-      indirizzo: r.indirizzo || '',
+      comune: t(r.comune || r.citta),
+      indirizzo: t(r.indirizzo),
       ateco,
       addetti: num(r.addetti != null && r.addetti !== '' ? r.addetti : r.dipendenti),
       fatturato: num(r.fatturato),
-      email: r.email || '',
-      pec: r.pec || '',
-      telefono: r.telefono || r.tel || '',
-      sito: r.sito || r.sito_web || '',
-      fonte: r.fonte || fonte,
+      email: t(r.email),
+      pec: t(r.pec),
+      telefono: t(r.telefono || r.tel),
+      sito: t(r.sito || r.sito_web),
+      fonte: t(r.fonte) || fonte,
       archivio: fonte
     };
   }
@@ -113,8 +114,12 @@
     if (!confirm('Cancellare dal browser tutti gli archivi importati?')) return;
     try {
       const d = await db();
-      d.transaction('kv', 'readwrite').objectStore('kv').delete('importati');
-    } catch (e) { /* niente da cancellare */ }
+      await new Promise((ok, ko) => {
+        const tx = d.transaction('kv', 'readwrite');
+        tx.objectStore('kv').delete('importati');
+        tx.oncomplete = ok; tx.onerror = () => ko(tx.error);
+      });
+    } catch (e) { alert('Impossibile cancellare l\'archivio locale: ' + (e && e.message || e)); return; }
     dati = window.generaDemo();
     $('fonteInfo').textContent = 'Archivio locale svuotato. Dati DEMO interamente fittizi.';
     iniziaFiltri(); applica();
