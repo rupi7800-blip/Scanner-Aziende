@@ -212,8 +212,43 @@
     });
   }
 
+  // ---------- mercato (ISTAT, dati/mercato-<sigla>.json) ----------
+  const mercati = {};
+  async function caricaMercato(sig) {
+    if (!(sig in mercati)) {
+      try { mercati[sig] = await (await fetch('dati/mercato-' + sig + '.json')).json(); }
+      catch (e) { mercati[sig] = null; }
+    }
+    return mercati[sig];
+  }
+  async function aggiornaMercato() {
+    const box = $('mercato'), prov = $('provincia').value;
+    const m = prov ? await caricaMercato(prov) : null;
+    if (!m || prov !== $('provincia').value) { box.hidden = true; return; }
+    const sez = $('settore').value, sub = $('sottosettore').value;
+    let u = 0, a = 0, etichetta = 'tutti i settori';
+    if (sub) {
+      const d = m.divisioni[String(sub).padStart(2, '0')] || {};
+      u = d.unita || 0; a = d.addetti || 0; etichetta = 'sottosettore ' + String(sub).padStart(2, '0');
+    } else if (sez) {
+      const s = ATECO.sezioni.find(x => x.codice === sez);
+      for (const [cod, d] of Object.entries(m.divisioni)) {
+        if (+cod >= s.da && +cod <= s.a) { u += d.unita || 0; a += d.addetti || 0; }
+      }
+      etichetta = 'settore ' + sez;
+    } else { u = m.totale.unita; a = m.totale.addetti; }
+    const nel = dati.filter(d => d.provincia === prov && (!sez || ATECO.sezioneDaCodice(d.ateco) === sez) &&
+      (!sub || String(ATECO.divisioneDaCodice(d.ateco)) === sub)).length;
+    box.hidden = false;
+    box.innerHTML = `<b>Mercato ${esc(prov)}, ${esc(etichetta)} (ISTAT ${m.anno}):</b> ${u.toLocaleString('it-IT')} unità locali, ` +
+      `${a.toLocaleString('it-IT')} addetti. Nei tuoi dati: <b>${nel.toLocaleString('it-IT')}</b> aziende ` +
+      `(${u ? (nel / u * 100).toFixed(1).replace('.', ',') : '0'}% delle unità locali). ` +
+      `<span class="muto">Le unità locali non coincidono con le imprese; contano anche sedi secondarie.</span>`;
+  }
+
   // ---------- rendering ----------
   function disegna() {
+    aggiornaMercato();
     const tot = filtrati.length;
     const conF = filtrati.filter(d => d.fatturato != null);
     const somma = conF.reduce((s, d) => s + d.fatturato, 0);

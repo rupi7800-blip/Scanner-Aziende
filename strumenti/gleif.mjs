@@ -31,7 +31,7 @@ for (let p = 1; url && p <= maxPag; p++) {
   if (p % 20 === 0) console.log(`  pagina ${p}/${j.meta.pagination.lastPage}, trovate ${out.length}`);
   url = j.links && j.links.next; await pausa(250);
 }
-salva('gleif', out, {
+salva(filtroProv ? 'gleif-' + filtroProv.join('-') : 'gleif', out, {
   titolo: 'GLEIF · entità con codice LEI', licenza: 'CC0', url: 'https://www.gleif.org/en/lei-data/gleif-golden-copy',
   nota: 'Senza contatti, settore, addetti né fatturato. Utile per anagrafica e P.IVA.'
 });

@@ -1,9 +1,10 @@
 // Wikidata (query.wikidata.org, CC0): aziende italiane con sito, fatturato (P2139), dipendenti (P1128), settore.
-// Copertura bassa e sbilanciata verso grandi aziende. Uso: node strumenti/wikidata.mjs [--limite N]
+// Copertura bassa e sbilanciata verso grandi aziende. Uso: node strumenti/wikidata.mjs [--limite N] [--province VA]
 import { opzioni, scarica, salva, testo, sito, sigleValide } from './lib.mjs';
 
 const o = opzioni();
 const limite = o.limite ? Number(o.limite) : 6000;
+const filtroProv = o.province ? String(o.province).toUpperCase().split(',') : null;
 const valide = sigleValide();
 const q = `SELECT ?c ?cLabel ?site ?rev ?emp ?comuneLabel ?iso WHERE {
   ?c wdt:P17 wd:Q38 ; wdt:P31 wd:Q4830453 .
@@ -28,8 +29,8 @@ for (const b of j.results.bindings) {
   if (sg && valide.has(sg) && !x.provincia) x.provincia = sg;
   per.set(id, x);
 }
-const out = [...per.values()].filter(x => x.nome && !/^Q\d+$/.test(x.nome)).slice(0, limite);
-salva('wikidata', out, {
+const out = [...per.values()].filter(x => x.nome && !/^Q\d+$/.test(x.nome) && (!filtroProv || filtroProv.includes(x.provincia))).slice(0, limite);
+salva(filtroProv ? 'wikidata-' + filtroProv.join('-') : 'wikidata', out, {
   titolo: 'Wikidata · aziende italiane', licenza: 'CC0', url: 'https://www.wikidata.org',
   nota: 'Copertura bassa: fatturato e addetti presenti solo in una minoranza di record (da un campione: 11% e 17%), prevalentemente grandi aziende. Il fatturato è preso senza controllare valuta e anno: può non essere in euro né il più recente.'
 });

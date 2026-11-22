@@ -1,9 +1,10 @@
 // IndicePA (www.indicepa.gov.it/ipa-dati): enti pubblici e gestori di pubblici servizi, con PEC/e-mail.
-// Uso: node strumenti/ipa.mjs [--limite N]
+// Uso: node strumenti/ipa.mjs [--limite N] [--province VA,CO]
 import { opzioni, scarica, salva, testo, sito, pivaValida } from './lib.mjs';
 
 const o = opzioni();
 const limite = o.limite ? Number(o.limite) : Infinity;
+const filtroProv = o.province ? String(o.province).toUpperCase().split(',') : null;
 const BASE = 'https://www.indicepa.gov.it';
 // I link del catalogo puntano a "indicepa.gov.it" (senza www): si riscrivono per l'host con certificato corretto.
 let url = BASE + '/ipa-dati/dataset/502ff370-1b2c-4310-94c7-f39ceb7500e3/resource/3ed63523-ff9c-41f6-a6fe-980f3d9e501f/download/amministrazioni.txt';
@@ -23,6 +24,7 @@ const out = [];
 for (const riga of righe) {
   if (out.length >= limite) break;
   const c = riga.split('\t');
+  if (filtroProv && !filtroProv.includes(g(c, 'provincia').toUpperCase())) continue;
   let email = '', pec = '';
   for (let i = 1; i <= 5; i++) {
     const m = g(c, 'mail' + i).toLowerCase(), t = g(c, 'tipo_mail' + i).toLowerCase();
@@ -45,7 +47,7 @@ for (const riga of righe) {
     fonte: 'IndicePA · ' + (g(c, 'tipologia_amm') || 'enti')
   });
 }
-salva('indicepa', out, {
+salva(filtroProv ? 'indicepa-' + filtroProv.join('-') : 'indicepa', out, {
   titolo: 'IndicePA · enti e gestori di pubblici servizi', licenza: 'CC-BY 4.0 (IODL)', url: BASE + '/ipa-dati/',
   nota: 'Pubblica amministrazione: non è un registro delle imprese.'
 });
