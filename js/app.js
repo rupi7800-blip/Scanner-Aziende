@@ -11,7 +11,26 @@
   // ---------- utilità ----------
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const eur = v => v == null ? '—' : new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
-  const num = v => (v == null || v === '') ? null : (isNaN(Number(v)) ? null : Number(v));
+  // Legge numeri anche in formato italiano ("1.250.000", "1250000,50", "€ 1.250,5").
+  function num(v) {
+    if (v == null || v === '') return null;
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    let s = String(v).replace(/[€\s]/g, '');
+    if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.includes(',')) s = s.replace(',', '.');
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    const n = Number(s);
+    return s === '' || !isFinite(n) ? null : n;
+  }
+  // Accetta solo sigle valide o nomi di provincia (convertiti in sigla); altrimenti vuoto.
+  function siglaProvincia(v) {
+    const t = String(v || '').trim();
+    if (!t) return '';
+    const up = t.toUpperCase();
+    const p = window.PROVINCE.find(x => x.sigla === up) ||
+      window.PROVINCE.find(x => x.nome.toLowerCase() === t.toLowerCase());
+    return p ? p.sigla : '';
+  }
   const urlSicuro = u => /^https?:\/\//i.test(u) ? u : (u ? 'https://' + u : '');
 
   // Dimensione secondo la raccomandazione UE 2003/361 (addetti + fatturato).
@@ -33,17 +52,18 @@
       id: r.id || fonte + '-' + i,
       nome: r.nome || r.ragione_sociale || r.denominazione || '(senza nome)',
       piva: r.piva || r.partita_iva || '',
-      provincia: String(r.provincia || r.prov || '').toUpperCase().slice(0, 2),
+      provincia: siglaProvincia(r.provincia || r.prov),
       comune: r.comune || r.citta || '',
       indirizzo: r.indirizzo || '',
       ateco,
-      addetti: num(r.addetti || r.dipendenti),
+      addetti: num(r.addetti != null && r.addetti !== '' ? r.addetti : r.dipendenti),
       fatturato: num(r.fatturato),
       email: r.email || '',
       pec: r.pec || '',
       telefono: r.telefono || r.tel || '',
       sito: r.sito || r.sito_web || '',
-      fonte: r.fonte || fonte
+      fonte: r.fonte || fonte,
+      archivio: fonte
     };
   }
 
@@ -71,17 +91,33 @@
     return righe.map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || '').trim()])));
   }
 
-  async function importa(file) {
+  async function importa(e) {
+    const file = e.target.files[0];
     const testo = await file.text();
     let righe;
     try {
       righe = /\.json$/i.test(file.name) ? JSON.parse(testo) : parseCSV(testo);
       if (!Array.isArray(righe)) throw new Error('Il JSON deve essere un elenco di aziende');
     } catch (e) { alert('File non valido: ' + e.message); return; }
-    const nuovi = righe.map((r, i) => normalizza(r, i, file.name));
-    dati = dati.filter(d => !d.fonte.startsWith('DEMO')).concat(nuovi);
+    const nuovi = righe.filter(r => r && typeof r === 'object').map((r, i) => normalizza(r, i, file.name));
+    const senzaProv = nuovi.filter(d => !d.provincia).length;
+    // Reimportare lo stesso file sostituisce le righe precedenti invece di duplicarle.
+    dati = dati.filter(d => !d.fonte.startsWith('DEMO') && d.archivio !== file.name).concat(nuovi);
+    e.target.value = '';
     salva(); iniziaFiltri(); applica();
-    $('fonteInfo').textContent = `Caricate ${nuovi.length} aziende da ${file.name}.`;
+    $('fonteInfo').textContent = `Caricate ${nuovi.length} aziende da ${file.name}.` +
+      (senzaProv ? ` Attenzione: ${senzaProv} senza provincia riconoscibile (usa la sigla, es. MI).` : '');
+  }
+
+  async function svuota() {
+    if (!confirm('Cancellare dal browser tutti gli archivi importati?')) return;
+    try {
+      const d = await db();
+      d.transaction('kv', 'readwrite').objectStore('kv').delete('importati');
+    } catch (e) { /* niente da cancellare */ }
+    dati = window.generaDemo();
+    $('fonteInfo').textContent = 'Archivio locale svuotato. Dati DEMO interamente fittizi.';
+    iniziaFiltri(); applica();
   }
 
   // Persistenza locale (IndexedDB) degli archivi importati.
@@ -187,7 +223,7 @@
       const div = ATECO.divisioneDaCodice(d.ateco);
       return `<tr>
         <td data-l="Azienda"><b>${esc(d.nome)}</b><br><span class="muto">P.IVA ${esc(d.piva || 'n.d.')} · ${esc(d.fonte)}</span></td>
-        <td data-l="Sede">${esc(d.comune)}<br><span class="muto">${esc(d.provincia)}</span></td>
+        <td data-l="Sede">${esc(d.comune)}<br><span class="muto">${esc(d.provincia || 'prov. n.d.')}</span></td>
         <td data-l="Settore">${esc(ATECO.sezioneDaCodice(d.ateco) || '—')} · ${div != null ? esc(ATECO.nomeDivisione(div)) : '—'}<br><span class="muto">ATECO ${esc(d.ateco || 'n.d.')}</span></td>
         <td data-l="Dimensione"><span class="badge ${k}">${DIM[k]}</span><br><span class="muto">${d.addetti != null ? d.addetti + ' addetti' : 'addetti n.d.'}</span></td>
         <td data-l="Fatturato" class="dx">${eur(d.fatturato)}</td>
@@ -229,12 +265,18 @@
     $('prec').addEventListener('click', () => { pagina--; disegna(); window.scrollTo(0, $('tabella').offsetTop - 10); });
     $('succ').addEventListener('click', () => { pagina++; disegna(); window.scrollTo(0, $('tabella').offsetTop - 10); });
     $('esporta').addEventListener('click', esporta);
-    $('file').addEventListener('change', e => e.target.files[0] && importa(e.target.files[0]));
-    document.querySelectorAll('th[data-k]').forEach(th => th.addEventListener('click', () => {
-      const k = th.dataset.k;
-      ordine = { campo: k, dir: ordine.campo === k ? -ordine.dir : (k === 'fatturato' || k === 'addetti' ? -1 : 1) };
-      ordina(); pagina = 0; disegna();
-    }));
+    $('file').addEventListener('change', e => e.target.files[0] && importa(e));
+    $('svuota').addEventListener('click', svuota);
+    document.querySelectorAll('th[data-k]').forEach(th => {
+      const ordinaPer = () => {
+        const k = th.dataset.k;
+        ordine = { campo: k, dir: ordine.campo === k ? -ordine.dir : (k === 'fatturato' || k === 'addetti' ? -1 : 1) };
+        ordina(); pagina = 0; disegna();
+      };
+      th.tabIndex = 0;
+      th.addEventListener('click', ordinaPer);
+      th.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ordinaPer(); } });
+    });
   }
   avvia();
 })();

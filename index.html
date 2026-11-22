@@ -19,10 +19,11 @@
     <label class="btn">Importa archivio CSV / JSON
       <input type="file" id="file" accept=".csv,.json,text/csv,application/json" hidden>
     </label>
+    <button type="button" id="svuota">Svuota archivio locale</button>
     <details>
       <summary>Formato dei file importabili</summary>
       <p>Colonne riconosciute (CSV con <code>,</code> o <code>;</code>, oppure JSON come elenco di oggetti):
-      <code>ragione_sociale, partita_iva, provincia (sigla), comune, indirizzo, ateco, addetti, fatturato (in €), email, pec, telefono, sito</code>.
+      <code>ragione_sociale, partita_iva, provincia (sigla o nome), comune, indirizzo, ateco, addetti, fatturato (in €), email, pec, telefono, sito</code>.
       Settore e sottosettore sono ricavati dal codice ATECO (es. <code>25.62</code>). I dati restano nel tuo browser e non vengono inviati altrove.</p>
     </details>
   </section>
