@@ -34,6 +34,20 @@ Non esiste una fonte gratuita nazionale con **fatturato per singola azienda**: p
 
 In ambienti con proxy: `NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=<bundle> npm run dati`.
 
+## Camere di Commercio e provincia di Varese
+
+Le Camere di Commercio (Registro Imprese, InfoCamere) **non pubblicano gratuitamente l'elenco nominativo delle imprese**: online
+ci sono solo dati aggregati (conteggi, report PDF). Gli elenchi con nomi e contatti si ottengono a pagamento (le tariffe le
+fissa ogni Camera, in genere a nominativo) o con una convenzione con InfoCamere. Per Varese il percorso consigliato è quindi:
+
+1. `npm run dati:varese` — scarica tutto ciò che è gratuito per VA: mercato ISTAT (unità locali e addetti per settore ATECO),
+   enti IndicePA, aziende Wikidata e entità GLEIF della provincia.
+2. Quando l'app è su Varese mostra il pannello **Mercato** (ISTAT): quante unità locali esistono per settore/sottosettore e
+   quanta parte ne copri con i tuoi dati.
+3. Per i contatti commerciali: richiedere alla Camera di Commercio di Varese (o via Registro Imprese) un **elenco imprese
+   per ATECO/comune** e **importarlo come CSV** dal pulsante nella pagina. Nel CSV usa le colonne indicate sopra; il fatturato
+   arriva solo se l'estrazione lo include (di norma proviene dai bilanci depositati, a pagamento).
+
 ## Privacy e uso dei contatti
 
 **Licenza aperta (CC0, CC-BY) non significa libero uso per marketing**: gli obblighi GDPR restano.

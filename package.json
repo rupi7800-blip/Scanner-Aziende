@@ -10,6 +10,7 @@
     "dati:ipa": "node strumenti/ipa.mjs",
     "dati:gleif": "node strumenti/gleif.mjs --max-pagine 300",
     "dati:wikidata": "node strumenti/wikidata.mjs",
+    "dati:varese": "node strumenti/istat.mjs --provincia VA && node strumenti/ipa.mjs --province VA && node strumenti/wikidata.mjs --province VA && node strumenti/gleif.mjs --province VA",
     "dati": "npm run dati:lombardia && npm run dati:ipa && npm run dati:wikidata && npm run dati:gleif"
   },
   "engines": { "node": ">=18" }
