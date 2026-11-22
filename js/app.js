@@ -253,13 +253,46 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
+  // ---------- fonti collegate (dati/indice.json, generato da strumenti/*.mjs) ----------
+  async function caricaCollegate() {
+    try {
+      const idx = await (await fetch('dati/indice.json', { cache: 'no-cache' })).json();
+      const gruppi = await Promise.all((idx.fonti || []).map(async f => {
+        try {
+          const righe = await (await fetch('dati/' + f.file, { cache: 'no-cache' })).json();
+          return righe.map((r, i) => normalizza(r, i, f.file));
+        } catch (e) { return []; }
+      }));
+      return { righe: gruppi.flat(), fonti: (idx.fonti || []).map(f => f.titolo || f.file) };
+    } catch (e) { return { righe: [], fonti: [] }; }
+  }
+
+  // Unisce i duplicati (stessa P.IVA di 11 cifre): tiene il primo record e completa i campi vuoti.
+  function unisci(lista) {
+    const per = new Map(), out = [];
+    for (const d of lista) {
+      const k = /^\d{11}$/.test(d.piva) ? d.piva : null;
+      const es = k && per.get(k);
+      if (!es) { out.push(d); if (k) per.set(k, d); continue; }
+      for (const c of ['comune', 'indirizzo', 'ateco', 'addetti', 'fatturato', 'email', 'pec', 'telefono', 'sito', 'provincia']) {
+        if (es[c] == null || es[c] === '') es[c] = d[c];
+      }
+      if (!es.fonte.includes(d.fonte)) es.fonte += ' + ' + d.fonte;
+    }
+    return out;
+  }
+
   // ---------- avvio ----------
   async function avvia() {
     const importati = await carica();
-    dati = importati.length ? importati : window.generaDemo();
-    $('fonteInfo').textContent = importati.length
-      ? `Caricate ${importati.length} aziende dai tuoi archivi importati.`
-      : 'Dati DEMO interamente fittizi: importa un tuo archivio CSV/JSON per lavorare su dati reali.';
+    const coll = await caricaCollegate();
+    const reali = unisci(importati.concat(coll.righe));
+    dati = reali.length ? reali : window.generaDemo();
+    $('fonteInfo').textContent = reali.length
+      ? `Caricate ${reali.length.toLocaleString('it-IT')} aziende` +
+        (coll.righe.length ? ` (fonti collegate: ${coll.fonti.join('; ')})` : '') +
+        (importati.length ? ` e archivi importati (${importati.length.toLocaleString('it-IT')}).` : '.')
+      : 'Dati DEMO interamente fittizi: collega le fonti (vedi README, npm run dati) o importa un tuo archivio CSV/JSON.';
     iniziaFiltri(); applica();
 
     ['provincia', 'sottosettore', 'fattMin', 'fattMax', 'soloContatti', 'soloFatturato'].forEach(id => $(id).addEventListener('input', applica));

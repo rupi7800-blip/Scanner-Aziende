@@ -22,6 +22,7 @@ window.ATECO = (function () {
     ['L', 'Attività immobiliari', 68, 68, { 68: 'Attività immobiliari' }],
     ['M', 'Attività professionali e tecniche', 69, 75, { 69: 'Legale e contabilità', 70: 'Consulenza gestionale', 71: 'Architettura e ingegneria', 72: 'Ricerca e sviluppo', 73: 'Pubblicità e ricerche di mercato', 74: 'Altre attività professionali' }],
     ['N', 'Noleggio e servizi alle imprese', 77, 82, { 77: 'Noleggio', 78: 'Selezione del personale', 79: 'Agenzie di viaggio', 80: 'Vigilanza', 81: 'Servizi per edifici e paesaggio', 82: 'Servizi di supporto alle imprese' }],
+    ['O', 'Amministrazione pubblica', 84, 84, { 84: 'Amministrazione pubblica e difesa' }],
     ['P', 'Istruzione', 85, 85, { 85: 'Istruzione e formazione' }],
     ['Q', 'Sanità e assistenza sociale', 86, 88, { 86: 'Assistenza sanitaria', 87: 'Assistenza residenziale', 88: 'Assistenza sociale non residenziale' }],
     ['R', 'Arte, sport e intrattenimento', 90, 93, { 90: 'Attività creative e artistiche', 93: 'Sport e intrattenimento' }],

@@ -1,0 +1,16 @@
+{
+  "name": "scanner-aziende",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scanner aziende italiane per provincia, dimensione, settore e sottosettore",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "dati:lombardia": "node strumenti/lombardia.mjs",
+    "dati:ipa": "node strumenti/ipa.mjs",
+    "dati:gleif": "node strumenti/gleif.mjs --max-pagine 300",
+    "dati:wikidata": "node strumenti/wikidata.mjs",
+    "dati": "npm run dati:lombardia && npm run dati:ipa && npm run dati:wikidata && npm run dati:gleif"
+  },
+  "engines": { "node": ">=18" }
+}
