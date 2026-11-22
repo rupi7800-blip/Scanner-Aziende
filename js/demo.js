@@ -25,7 +25,8 @@ window.generaDemo = function (n = 1600) {
   const out = [];
   for (let i = 0; i < n; i++) {
     const p = pick(provPesate);
-    const sez = window.ATECO.sezioni.find(x => x.codice === pick(bag));
+    const codiceSez = pick(bag);
+    const sez = window.ATECO.sezioni.find(x => x.codice === codiceSez);
     const divs = Object.keys(sez.divisioni).map(Number);
     const div = pick(divs);
     const r = rnd();

@@ -225,7 +225,7 @@
     $('settore').addEventListener('input', () => { aggiornaSottosettori(); applica(); });
     $('cerca').addEventListener('input', applica);
     document.querySelectorAll('input[name=dim]').forEach(x => x.addEventListener('change', applica));
-    $('reset').addEventListener('click', () => { $('filtri').reset(); aggiornaSottosettori(); applica(); });
+    $('azzera').addEventListener('click', () => { $('filtri').reset(); aggiornaSottosettori(); applica(); });
     $('prec').addEventListener('click', () => { pagina--; disegna(); window.scrollTo(0, $('tabella').offsetTop - 10); });
     $('succ').addEventListener('click', () => { pagina++; disegna(); window.scrollTo(0, $('tabella').offsetTop - 10); });
     $('esporta').addEventListener('click', esporta);
