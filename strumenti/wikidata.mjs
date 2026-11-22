@@ -31,5 +31,5 @@ for (const b of j.results.bindings) {
 const out = [...per.values()].filter(x => x.nome && !/^Q\d+$/.test(x.nome)).slice(0, limite);
 salva('wikidata', out, {
   titolo: 'Wikidata · aziende italiane', licenza: 'CC0', url: 'https://www.wikidata.org',
-  nota: 'Copertura bassa (fatturato nel ~2% dei casi), prevalentemente grandi aziende. Provincia spesso assente.'
+  nota: 'Copertura bassa: fatturato e addetti presenti solo in una minoranza di record (da un campione: 11% e 17%), prevalentemente grandi aziende.'
 });

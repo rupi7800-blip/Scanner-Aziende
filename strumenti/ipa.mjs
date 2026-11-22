@@ -26,7 +26,7 @@ for (const riga of righe) {
   let email = '', pec = '';
   for (let i = 1; i <= 5; i++) {
     const m = g(c, 'mail' + i).toLowerCase(), t = g(c, 'tipo_mail' + i).toLowerCase();
-    if (!m) continue;
+    if (!m || m === 'null' || !m.includes('@')) continue;
     if (t.includes('pec')) pec = pec || m; else email = email || m;
   }
   const cf = g(c, 'cf');

@@ -11,9 +11,19 @@ const BASE = 'https://dati.lombardia.it';
 const COL_ADDETTI = ['titolare_e_soci', 'familiari_e_collaboratori', 'impiegati', 'operai_generici', 'operai_specializzati', 'altri_dipendenti', 'apprendisti']
   .flatMap(c => [c + '_maschi', c + '_femmine']);
 
-const cat = await (await scarica(`${BASE}/api/catalog/v1?q=${encodeURIComponent('imprese artigiane')}&only=datasets&limit=100`)).json();
-const dataset = cat.results.map(r => r.resource).filter(r => /^Imprese artigiane - Provincia/i.test(r.name));
-console.log(`Trovati ${dataset.length} dataset provinciali.`);
+// La ricerca libera del catalogo non restituisce più i dataset provinciali: si cercano per titolo esatto
+// (le 12 province lombarde) e si aggiungono gli id già verificati.
+const NOTI = ['enra-jd4f', 'wmyt-zp5e', 'f8bi-ci4a', 'ngkj-9xic'];
+const PROV_LOMBARDE = ['Bergamo', 'Brescia', 'Como', 'Cremona', 'Lecco', 'Lodi', 'Mantova', 'Milano', 'Monza e Brianza', 'Pavia', 'Sondrio', 'Varese'];
+const trovati = new Map(NOTI.map(id => [id, { id, name: id }]));
+for (const p of PROV_LOMBARDE) {
+  try {
+    const c = await (await scarica(`${BASE}/api/catalog/v1?names=${encodeURIComponent('Imprese artigiane - Provincia ' + p)}`)).json();
+    for (const r of c.results || []) trovati.set(r.resource.id, r.resource);
+  } catch (e) { console.error('  ricerca', p, 'non riuscita:', e.message); }
+}
+const dataset = [...trovati.values()];
+console.log(`Dataset provinciali: ${dataset.map(d => d.id).join(', ')} (la fonte copre solo alcune province lombarde).`);
 
 const out = [], visti = new Set();
 for (const d of dataset) {
@@ -48,7 +58,8 @@ for (const d of dataset) {
   }
   if (out.length >= limite) break;
 }
+if (!out.length) { console.error('Nessuna riga scaricata: non salvo un file vuoto.'); process.exit(2); }
 salva('lombardia', out.slice(0, limite), {
   titolo: 'Regione Lombardia · Imprese artigiane', licenza: 'CC0', url: BASE + '/browse?q=imprese+artigiane',
-  nota: 'Solo artigianato lombardo. Contiene anche ditte individuali: dati personali, vedi README.'
+  nota: 'Solo artigianato di alcune province lombarde (Como, Pavia, Sondrio e altre pubblicate). Contiene anche ditte individuali: dati personali, vedi README.'
 });

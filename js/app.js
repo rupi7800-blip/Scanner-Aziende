@@ -48,6 +48,8 @@
 
   function normalizza(r, i, fonte) {
     const t = v => (v == null ? '' : String(v));
+    // Scarta segnaposto come "null"/"n.d." e valori che non sono indirizzi e-mail.
+    const contatto = v => { const s = t(v).trim(); return s.includes('@') ? s : ''; };
     const ateco = t(r.ateco || r.codice_ateco);
     return {
       id: r.id || fonte + '-' + i,
@@ -59,8 +61,8 @@
       ateco,
       addetti: num(r.addetti != null && r.addetti !== '' ? r.addetti : r.dipendenti),
       fatturato: num(r.fatturato),
-      email: t(r.email),
-      pec: t(r.pec),
+      email: contatto(r.email),
+      pec: contatto(r.pec),
       telefono: t(r.telefono || r.tel),
       sito: t(r.sito || r.sito_web),
       fonte: t(r.fonte) || fonte,
@@ -263,7 +265,7 @@
           return righe.map((r, i) => normalizza(r, i, f.file));
         } catch (e) { return []; }
       }));
-      return { righe: gruppi.flat(), fonti: (idx.fonti || []).map(f => f.titolo || f.file) };
+      return { righe: gruppi.flat(), fonti: (idx.fonti || []).filter(f => f.n > 0).map(f => f.titolo || f.file) };
     } catch (e) { return { righe: [], fonti: [] }; }
   }
 
