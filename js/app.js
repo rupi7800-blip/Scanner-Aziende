@@ -235,7 +235,13 @@
     const box = $('mercato'), prov = $('provincia').value;
     const m = prov ? await caricaMercato(prov) : null;
     if (prov !== $('provincia').value) return;       // nel frattempo la scelta è cambiata
-    if (provSotto !== prov) { provSotto = prov; aggiornaSottosettori(); }
+    if (provSotto !== prov) {
+      provSotto = prov;
+      const prima = $('sottosettore').value;
+      aggiornaSottosettori();
+      // Se il sottosettore scelto non esiste più per questa provincia, la tabella va rifiltrata (richiama anche questa funzione).
+      if ($('sottosettore').value !== prima) { applica(); return; }
+    }
     if (!m || $('settore').value === '?') { box.hidden = true; return; }
     const sez = $('settore').value, sub = $('sottosettore').value;
     let u = 0, a = 0, etichetta = 'tutti i settori';
@@ -252,8 +258,8 @@
     const nel = dati.filter(d => d.provincia === prov && (!sez || ATECO.sezioneDaCodice(d.ateco) === sez) &&
       (!sub || String(ATECO.divisioneDaCodice(d.ateco)) === sub)).length;
     box.hidden = false;
-    box.innerHTML = `<b>Mercato ${esc(prov)}, ${esc(etichetta)} (ISTAT ${m.anno}):</b> ${u.toLocaleString('it-IT', FMT)} unità locali, ` +
-      `${a.toLocaleString('it-IT', FMT)} addetti. Nei tuoi dati: <b>${nel.toLocaleString('it-IT', FMT)}</b> aziende ` +
+    box.innerHTML = `<b>Mercato ${esc(prov)}, ${esc(etichetta)} (ISTAT ${esc(m.anno)}):</b> ${Number(u).toLocaleString('it-IT', FMT)} unità locali, ` +
+      `${Number(a).toLocaleString('it-IT', FMT)} addetti. Nei tuoi dati: <b>${nel.toLocaleString('it-IT', FMT)}</b> aziende ` +
       `(${u ? (nel / u * 100).toFixed(1).replace('.', ',') : '0'}% delle unità locali). ` +
       `<span class="muto">Le unità locali non coincidono con le imprese; contano anche sedi secondarie.</span>`;
   }

@@ -16,7 +16,11 @@ const query = (off, lim) => `SELECT ?c ?cLabel ?site ?rev ?emp ?comuneLabel ?iso
 } ORDER BY ?c LIMIT ${lim} OFFSET ${off}`;
 // Query a pagine: una sola richiesta grande va in timeout (504) sul servizio pubblico.
 const bindings = [];
-for (let off = 0; off < limite * 2; off += PAGINA) {
+// Con --province serve scorrere tutte le righe nazionali (la provincia si filtra dopo): tetto alto e avviso se raggiunto.
+const MAX_RIGHE = filtroProv ? 40000 : limite * 2;
+let troncato = false;
+for (let off = 0; ; off += PAGINA) {
+  if (off >= MAX_RIGHE) { troncato = true; console.error(`ATTENZIONE: raggiunto il tetto di ${MAX_RIGHE} righe: la copertura può essere parziale.`); break; }
   const url = 'https://query.wikidata.org/sparql?' + new URLSearchParams({ query: query(off, PAGINA), format: 'json' });
   const j = await (await scarica(url, { headers: { Accept: 'application/sparql-results+json' }, timeout: 120000 }, 6)).json();
   bindings.push(...j.results.bindings);
