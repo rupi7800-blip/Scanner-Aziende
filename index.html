@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scanner Aziende Italia</title>
+<meta name="description" content="Cerca aziende per provincia, dimensione, settore e sottosettore e trova i contatti per le tue offerte commerciali.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>Scanner Aziende Italia</h1>
+  <p class="sub">Trova aziende per provincia, dimensione, settore e sottosettore, con fatturato e contatti.</p>
+</header>
+
+<main>
+  <section class="pannello" aria-label="Archivio dati">
+    <p id="fonteInfo" class="nota" role="status"></p>
+    <label class="btn">Importa archivio CSV / JSON
+      <input type="file" id="file" accept=".csv,.json,text/csv,application/json" hidden>
+    </label>
+    <details>
+      <summary>Formato dei file importabili</summary>
+      <p>Colonne riconosciute (CSV con <code>,</code> o <code>;</code>, oppure JSON come elenco di oggetti):
+      <code>ragione_sociale, partita_iva, provincia (sigla), comune, indirizzo, ateco, addetti, fatturato (in €), email, pec, telefono, sito</code>.
+      Settore e sottosettore sono ricavati dal codice ATECO (es. <code>25.62</code>). I dati restano nel tuo browser e non vengono inviati altrove.</p>
+    </details>
+  </section>
+
+  <form id="filtri" class="pannello filtri" onsubmit="return false" aria-label="Filtri">
+    <label>Provincia <select id="provincia"></select></label>
+    <label>Settore <select id="settore"></select></label>
+    <label>Sottosettore <select id="sottosettore" disabled></select></label>
+    <fieldset>
+      <legend>Dimensione</legend>
+      <label class="chk"><input type="checkbox" name="dim" value="micro"> Micro</label>
+      <label class="chk"><input type="checkbox" name="dim" value="piccola"> Piccola</label>
+      <label class="chk"><input type="checkbox" name="dim" value="media"> Media</label>
+      <label class="chk"><input type="checkbox" name="dim" value="grande"> Grande</label>
+      <label class="chk"><input type="checkbox" name="dim" value="nd"> N.d.</label>
+    </fieldset>
+    <label>Fatturato min (migliaia €) <input type="number" id="fattMin" min="0" inputmode="numeric"></label>
+    <label>Fatturato max (migliaia €) <input type="number" id="fattMax" min="0" inputmode="numeric"></label>
+    <label>Cerca nome, P.IVA, comune <input type="search" id="cerca"></label>
+    <label class="chk"><input type="checkbox" id="soloFatturato"> Solo con fatturato noto</label>
+    <label class="chk"><input type="checkbox" id="soloContatti"> Solo con almeno un contatto</label>
+    <div class="azioni">
+      <button type="button" id="reset">Azzera filtri</button>
+      <button type="button" id="esporta" class="primario">Esporta CSV</button>
+    </div>
+  </form>
+
+  <p id="riepilogo" class="riepilogo" role="status"></p>
+
+  <div class="scroll" id="tabella">
+    <table>
+      <thead><tr>
+        <th data-k="nome" tabindex="0">Azienda</th>
+        <th data-k="provincia">Sede</th>
+        <th data-k="ateco">Settore</th>
+        <th data-k="dimensione">Dimensione</th>
+        <th data-k="fatturato" class="dx">Fatturato</th>
+        <th>Contatti</th>
+      </tr></thead>
+      <tbody id="righe"></tbody>
+    </table>
+  </div>
+  <nav class="pag">
+    <button id="prec">‹ Precedente</button>
+    <span id="pagInfo"></span>
+    <button id="succ">Successiva ›</button>
+  </nav>
+  <p class="nota">Dimensione secondo la raccomandazione UE 2003/361 (addetti e fatturato). Usa i contatti nel rispetto del GDPR e della normativa sul marketing diretto (opposizione, Registro delle Opposizioni, informativa).</p>
+</main>
+
+<script src="js/province.js"></script>
+<script src="js/ateco.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
